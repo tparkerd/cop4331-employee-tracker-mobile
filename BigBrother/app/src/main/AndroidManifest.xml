@@ -27,7 +27,6 @@
         <activity android:name=".LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -37,8 +36,17 @@
         <activity android:name=".SignUpActivity" />
         <activity
             android:name=".LocationActivity"
-            android:label="@string/title_activity_maps"></activity>
-        <activity android:name=".LocationHandler" />
+            android:label="@string/title_activity_maps" />
+
+        <service
+            android:name=".LocationService"
+            android:exported="false" />
+
+        <receiver
+            android:name=".LocationReceiver"
+            android:enabled="true"
+            android:exported="true"></receiver>
+
     </application>
 
 </manifest>

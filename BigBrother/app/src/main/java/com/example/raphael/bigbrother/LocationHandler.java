@@ -2,7 +2,9 @@ package com.example.raphael.bigbrother;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -35,26 +37,37 @@ public class LocationHandler extends AppCompatActivity implements LocationListen
     private long time = System.currentTimeMillis();
     private static String url;
 
-    public LocationHandler(AppCompatActivity activity) {
-        url = activity.getApplicationContext().getResources().getString(R.string.clockUrl);
-        time = System.currentTimeMillis();
-        locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(activity,new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-            return;
-        }
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-        String locationProvider = LocationManager.GPS_PROVIDER;
-        Location lastKnownLocation = locationManager.getLastKnownLocation(locationProvider);
-        // Make sure that the location isn't mock data
-        // if (lastKnownLocation.isFromMockProvider()) return; // TODO(timp): include handling for when data is falsified
-        if (lastKnownLocation != null) {
-            lat = lastKnownLocation.getLatitude();
-            lng = lastKnownLocation.getLongitude();
-            this.onLocationChanged(lastKnownLocation);
-        }
+    @Override
+    protected void onCreate(Bundle saved) {
+        super.onCreate(saved);
+        final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
+        url = this.getApplicationContext().getResources().getString(R.string.clockUrl);
+    }
 
+
+    public LocationHandler(AppCompatActivity activity) {
+
+        time = System.currentTimeMillis();
+
+        if ( !locationManager.isProviderEnabled( LocationManager.GPS_PROVIDER ) ) {
+            buildAlertMessageNoGps();
+        } else {
+            if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+                return;
+            }
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+            String locationProvider = LocationManager.GPS_PROVIDER;
+            Location lastKnownLocation = locationManager.getLastKnownLocation(locationProvider);
+            // Make sure that the location isn't mock data
+            // if (lastKnownLocation.isFromMockProvider()) return; // TODO(timp): include handling for when data is falsified
+            if (lastKnownLocation != null) {
+                lat = lastKnownLocation.getLatitude();
+                lng = lastKnownLocation.getLongitude();
+                this.onLocationChanged(lastKnownLocation);
+            }
+        }
     }
 
     public static JSONObject getCoordinates() throws JSONException {
@@ -139,5 +152,24 @@ public class LocationHandler extends AppCompatActivity implements LocationListen
 
     public void stop() {
         locationManager.removeUpdates(this);
+    }
+
+
+    private void buildAlertMessageNoGps() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Your GPS seems to be disabled, do you want to enable it?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                        startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                        dialog.cancel();
+                    }
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
     }
 }

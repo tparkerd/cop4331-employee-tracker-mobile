@@ -1,7 +1,11 @@
 package com.example.raphael.bigbrother;
 
+import android.app.IntentService;
+import android.app.Service;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
@@ -22,18 +26,23 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        locationHandler = new LocationHandler(this);
     }
 
+    /**
+     *
+     * @param view
+     */
     public void newUserSignIn(View view){
-        //open new user activity on click event.
-
-        System.out.println("clicked New user button, going to SignIn Activity");
-
         Intent intent = new Intent(this, SignUpActivity.class);
         startActivity(intent);
+
     }
 
+    /**
+     *
+     * @param view
+     * @throws JSONException
+     */
     public void sendJSONRequest(View view) throws JSONException {
         System.out.println("Sending JSON...");
         String url = getResources().getString(R.string.loginUrl);
@@ -66,10 +75,11 @@ public class LoginActivity extends AppCompatActivity {
                             ConnectionHandler.user.username = body.getString("username");
                             ConnectionHandler.user.firstName = response.getString("firstName");
                             ConnectionHandler.user.lastName = response.getString("lastName");
+                            locationHandler = new LocationHandler(LoginActivity.this);
+                            doLogin(bundle);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        doLogin(bundle);
                     }
                 }, new Response.ErrorListener() {
 
